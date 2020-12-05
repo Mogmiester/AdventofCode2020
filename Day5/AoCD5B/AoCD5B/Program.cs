@@ -14,8 +14,11 @@ namespace AoCD5B
             string fileAsString = File.ReadAllText(Path.Combine(InputFileLocation, InputFileName)).Replace("\r", "");
             string[] fileLines = fileAsString.Split('\n');
             int currentMax = -1;
+            int currentMin = 999;
             int stringCounter = 0;
             bool debugMode = false;
+            bool[] seatTaken = new bool[1024];
+
 
             foreach (string line in fileLines)
             {
@@ -24,7 +27,9 @@ namespace AoCD5B
                 {
                     int binaryStringToNumber = BinaryStringToNumber(line.Substring(0, 7), "F", "B") * 8 + BinaryStringToNumber(line.Substring(7, 3), "L", "R");
                     if (debugMode) { Console.WriteLine(binaryStringToNumber.ToString()); }
+                    seatTaken[binaryStringToNumber] = true;
                     currentMax = Math.Max(currentMax, binaryStringToNumber);
+                    currentMin = Math.Min(currentMin, binaryStringToNumber);
                 }
                 else
                 {
@@ -32,7 +37,10 @@ namespace AoCD5B
                 }
             }
 
-            Console.WriteLine(currentMax.ToString());
+            for (int i = currentMin; i < currentMax; i++)
+            {
+                if (!seatTaken[i]) { Console.WriteLine(i.ToString()); }
+            }
         }
 
         public static int BinaryStringToNumber(string inputString, string zeroString, string oneString)
