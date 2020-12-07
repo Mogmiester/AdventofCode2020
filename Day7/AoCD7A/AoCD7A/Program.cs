@@ -6,18 +6,46 @@ using System.Collections.Generic;
 
 namespace AoCD7A
 {
+    public static class Graph //this is a disgrace
+    {
+        public static Dictionary<string, Node> AllNodes = new Dictionary<string, Node>();
+
+        public static void AddParent(string child, string parent)
+        {
+
+            if (!AllNodes.TryGetValue(child, out Node childNode))
+            {
+                childNode = new Node();
+                AllNodes.Add(child, childNode);
+            }
+
+            if (!AllNodes.TryGetValue(parent, out Node parentNode))
+            {
+                parentNode = new Node();
+                AllNodes.Add(parent, parentNode);
+            }
+
+            if (!childNode.parentNodes.ContainsKey(parent))
+            {
+                childNode.parentNodes.Add(parent, parentNode);
+            }
+        }
+    }
+    public class Node
+    {
+        public readonly string Name;
+        public Dictionary<string, Node> parentNodes = new Dictionary<string, Node>();
+    }
+
     class Program
     {
         static void Main(string[] args)
         {
             string InputFileLocation = @"C:\Users\matta\Documents\Advent of Code\Inputs\";
-            string InputFileName = "STCDay07.txt";
+            string InputFileName = "Day7A.txt";
             string fileAsString = File.ReadAllText(Path.Combine(InputFileLocation, InputFileName)).Replace("\r", "");
-            string[] initialSplit = new string[1];
-            initialSplit[0] = "\n";
+            string[] initialSplit = { "\n" };
             string[] allRules = fileAsString.Split(initialSplit, StringSplitOptions.RemoveEmptyEntries);
-            Dictionary<string, HashSet<string>> directedGraph = new Dictionary<string, HashSet<string>>();
-
 
             foreach (string line in allRules)
             {
@@ -26,54 +54,28 @@ namespace AoCD7A
                 {
                     cleanLine = cleanLine.Replace(i.ToString(), "");
                 }
-                string[] rulesSplit = new string[1];
-                rulesSplit[0] = "contain";
+                string[] rulesSplit = { "contain" };
                 string[] rule = cleanLine.Split(rulesSplit, StringSplitOptions.None);
                 string parentBag = rule[0];
                 string[] childBags = rule[1].Split(",");
                 foreach(string childBag in childBags)
                 {
-                    if (!directedGraph.TryGetValue(childBag, out HashSet<string> currentContaintingBags))
-                    {
-                        currentContaintingBags = new HashSet<string>();
-                        currentContaintingBags.Add(parentBag);
-                        directedGraph.Add(childBag, currentContaintingBags);
-                    }
-                    else
-                    {
-                        currentContaintingBags.Add(parentBag);
-                    }
+                    Graph.AddParent(childBag, parentBag);
                 }
             }
+            Console.WriteLine((GetHashSetOfAllParents("shinygold").Count - 1).ToString());
+        }
 
-            HashSet<string> answerSet = new HashSet<string>();
-            HashSet<string> processedBags = new HashSet<string>();
-            answerSet.Add("shinygold");
-            bool continueProcessing = true;
-
-            while (continueProcessing)
+        public static HashSet<string> GetHashSetOfAllParents(string child)
+        {
+            HashSet<string> workingHashSet = new HashSet<string>();
+            workingHashSet.Add(child);
+            Graph.AllNodes.TryGetValue(child, out Node childNode);
+            foreach ((string name, Node parentNode) in childNode.parentNodes)
             {
-                HashSet<string> processingAnswerSet = new HashSet<string>(answerSet);
-                foreach (string childBag in processingAnswerSet)
-                {
-                    if (directedGraph.TryGetValue(childBag, out HashSet<string> containingBags))
-                    {
-                        foreach (string containgingBag in containingBags)
-                        {
-                            answerSet.Add(containgingBag);
-                        }
-                    }
-                    processedBags.Add(childBag);
-                }
-
-                answerSet.ExceptWith(processingAnswerSet);
-                if (answerSet.Count == 0)
-                {
-                    continueProcessing = false;
-                }
+                workingHashSet.UnionWith(GetHashSetOfAllParents(name));
             }
-
-            Console.WriteLine(processedBags.Count - 1);
+            return workingHashSet;
         }
     }
 }
