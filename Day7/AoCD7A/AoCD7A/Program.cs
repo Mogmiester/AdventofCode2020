@@ -8,33 +8,28 @@ namespace AoCD7A
 {
     public static class Graph //this is a disgrace
     {
-        public static Dictionary<string, Node> AllNodes = new Dictionary<string, Node>();
+        public static Dictionary<string, HashSet<string>> AllNodes = new Dictionary<string, HashSet<string>>();
 
         public static void AddParent(string child, string parent)
         {
 
-            if (!AllNodes.TryGetValue(child, out Node childNode))
+            if (!AllNodes.TryGetValue(child, out HashSet<string> childNode))
             {
-                childNode = new Node();
+                childNode = new HashSet<string>();
                 AllNodes.Add(child, childNode);
             }
 
-            if (!AllNodes.TryGetValue(parent, out Node parentNode))
+            if (!AllNodes.TryGetValue(parent, out HashSet<string> parentNode))
             {
-                parentNode = new Node();
+                parentNode = new HashSet<string>();
                 AllNodes.Add(parent, parentNode);
             }
 
-            if (!childNode.parentNodes.ContainsKey(parent))
+            if (!childNode.Contains(parent))
             {
-                childNode.parentNodes.Add(parent, parentNode);
+                childNode.Add(parent);
             }
         }
-    }
-    public class Node
-    {
-        public readonly string Name;
-        public Dictionary<string, Node> parentNodes = new Dictionary<string, Node>();
     }
 
     class Program
@@ -70,8 +65,8 @@ namespace AoCD7A
         {
             HashSet<string> workingHashSet = new HashSet<string>();
             workingHashSet.Add(child);
-            Graph.AllNodes.TryGetValue(child, out Node childNode);
-            foreach ((string name, Node parentNode) in childNode.parentNodes)
+            Graph.AllNodes.TryGetValue(child, out HashSet<string> childNode);
+            foreach (string name in childNode)
             {
                 workingHashSet.UnionWith(GetHashSetOfAllParents(name));
             }
