@@ -8,46 +8,43 @@ namespace AoCD7
     public static class Graph //this is now slightly less of a disgrace
     {
         public static Dictionary<string, HashSet<string>> AllNodesParents = new Dictionary<string, HashSet<string>>();
-        public static Dictionary<string, Dictionary<string, int>> AllNodesChildren = new Dictionary<string, Dictionary<string, int>>();
+        public static Dictionary<string, Dictionary<string, int>> AllNodesChildren = new Dictionary<string, Dictionary<string, int>>(); //parent is first key, child is second key
 
-        public static void AddParent(string child, string parent)
+        public static void AddEdge(string child, int weight, string parent)
         {
 
-            if (!AllNodesParents.TryGetValue(child, out HashSet<string> childNode))
+            if (!AllNodesChildren.TryGetValue(child, out Dictionary<string, int> childNodeDictionary))
             {
-                childNode = new HashSet<string>();
-                AllNodesParents.Add(child, childNode);
+                childNodeDictionary = new Dictionary<string, int>();
+                AllNodesChildren.Add(child, childNodeDictionary);
             }
 
-            if (!AllNodesParents.TryGetValue(parent, out HashSet<string> parentNode))
+            if (!AllNodesChildren.TryGetValue(parent, out Dictionary<string, int> parentNodeDictionary))
             {
-                parentNode = new HashSet<string>();
-                AllNodesParents.Add(parent, parentNode);
+                parentNodeDictionary = new Dictionary<string, int>();
+                AllNodesChildren.Add(parent, parentNodeDictionary);
             }
 
-            if (!childNode.Contains(parent))
+            if (!parentNodeDictionary.TryGetValue(child, out _))
             {
-                childNode.Add(parent);
-            }
-        }
-        public static void AddChild(string child, int weight, string parent)
-        {
-
-            if (!AllNodesChildren.TryGetValue(child, out Dictionary<string, int> childNode))
-            {
-                childNode = new Dictionary<string, int>();
-                AllNodesChildren.Add(child, childNode);
+                parentNodeDictionary.Add(child, weight);
             }
 
-            if (!AllNodesChildren.TryGetValue(parent, out Dictionary<string, int> parentNode))
+            if (!AllNodesParents.TryGetValue(child, out HashSet<string> childNodeHashSet))
             {
-                parentNode = new Dictionary<string, int>();
-                AllNodesChildren.Add(parent, parentNode);
+                childNodeHashSet = new HashSet<string>();
+                AllNodesParents.Add(child, childNodeHashSet);
             }
 
-            if (!parentNode.TryGetValue(child, out _))
+            if (!AllNodesParents.TryGetValue(parent, out HashSet<string> parentNodeHashSet))
             {
-                parentNode.Add(child, weight);
+                parentNodeHashSet = new HashSet<string>();
+                AllNodesParents.Add(parent, parentNodeHashSet);
+            }
+
+            if (!childNodeHashSet.Contains(parent))
+            {
+                childNodeHashSet.Add(parent);
             }
         }
 
@@ -104,12 +101,11 @@ namespace AoCD7
                     {
                         bagColour += splitChildString[i];
                     }
-                    Graph.AddParent(bagColour, parentBag);
-                    Graph.AddChild(bagColour, weight, parentBag);
+                    Graph.AddEdge(bagColour, weight, parentBag);
                 }
             }
-            Console.WriteLine(@"Part A" + (Graph.GetHashSetOfAllParents("shinygold").Count - 1).ToString());
-            Console.WriteLine(@"Part B" + (Graph.NumberOfContainedBags("shinygold") - 1).ToString());
+            Console.WriteLine(@"Part A: " + (Graph.GetHashSetOfAllParents("shinygold").Count - 1).ToString());
+            Console.WriteLine(@"Part B: " + (Graph.NumberOfContainedBags("shinygold") - 1).ToString());
         }
     }
 }
