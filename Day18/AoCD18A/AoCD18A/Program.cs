@@ -11,17 +11,17 @@ namespace AoCD18A
             bool parenthesisFound = false;
             bool seekingClosingParenthesis = false;
             int parenthesisCounter = 0;
-            for (int i = 0; i < parseTarget.Length; i++)
+            for (int i = parseTarget.Length; i > 0; i--)
             {
-                char parseChar = parseTarget[i];
-                if (parseChar == '(') { parenthesisFound = true; seekingClosingParenthesis = true; }
+                char parseChar = parseTarget[i - 1];
+                if (parseChar == ')') { parenthesisFound = true; seekingClosingParenthesis = true; }
                 if (seekingClosingParenthesis)
                 {
-                    if (parseChar == '(')
+                    if (parseChar == ')')
                     {
                         parenthesisCounter++;
                     }
-                    else if (parseChar == ')')
+                    else if (parseChar == '(')
                     {
                         parenthesisCounter--;
                     }
@@ -35,13 +35,13 @@ namespace AoCD18A
                     string firstString = "";
                     if (parenthesisFound)
                     {
-                        firstString = parseTarget[1..(i - 1)];
+                        firstString = parseTarget[(i+1)..^1];
                     }
                     else
                     {
-                        firstString = parseTarget[0..i];
+                        firstString = parseTarget[i..];
                     }
-                    string secondString = parseTarget[(i + 1)..];
+                    string secondString = parseTarget[0..(i-1)];
                     if (parseChar == '+') { return ParseString(firstString) + ParseString(secondString); }
                     if (parseChar == '*') { return ParseString(firstString) * ParseString(secondString); }
                     continue;
@@ -60,7 +60,7 @@ namespace AoCD18A
         static void Main(string[] args)
         {
             string InputFileLocation = @"C:\Users\matta\Documents\AdventofCode2020\Inputs\";
-            string InputFileName = "Day18ATest.txt";
+            string InputFileName = "Day18A.txt";
             string fileAsString = File.ReadAllText(Path.Combine(InputFileLocation, InputFileName)).Replace("\r", "");
 
             string[] initialSplit = { "\n" };
@@ -70,12 +70,10 @@ namespace AoCD18A
 
             foreach (string mathematicalExpression in splitFile)
             {
-                long result = ParseString(mathematicalExpression.Replace(" ", ""));
-                Console.WriteLine(result.ToString());
-                runningTotal += result;
+                runningTotal += ParseString(mathematicalExpression.Replace(" ", ""));
             }
             Console.WriteLine(runningTotal.ToString());
-            Console.WriteLine((26 + 437 + 12240 + 13632).ToString());
+
         }
     }
 }
