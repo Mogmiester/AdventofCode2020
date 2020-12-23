@@ -2,12 +2,13 @@
 using System.IO;
 using System.Collections.Generic;
 
-namespace AoCD19A
+namespace AoCD19
 {
     class RulesInterpreter
     {
         private Dictionary<int, Dictionary<int, Dictionary<int, (int RuleValue, bool FinalRule)>>> RuleSet = new Dictionary<int, Dictionary<int, Dictionary<int, (int, bool)>>>();
         //ruleID, rule option, rule position, child rule ID or string to match, if it's a final rule
+        private string MessageToCheck;
         public RulesInterpreter(string[] rules)
         {
             foreach (string rule in rules)
@@ -72,55 +73,73 @@ namespace AoCD19A
         
         public bool CheckMessage(string message) //to be a valid message a string must match rule 0
         {
-            bool matchesRules = CheckSubString(message, 0, out string remainingMessage);
-            return matchesRules && remainingMessage == "";
+            MessageToCheck = message;
+            bool result = CheckSubString(new HashSet<int>() { 0 }, 0, out HashSet<int> possibleMatches);
+            return result && possibleMatches.Contains(MessageToCheck.Length);
         }
 
-        private bool CheckSubString(string message, int ruleID, out string remainingMessage)
+        private bool CheckSubString(HashSet<int> startPositions, int ruleID, out HashSet<int> possibleMatches) //HashSet contains the start positions to check
         {
-            if (message == "")
+            if (RuleSet[ruleID][0][0].FinalRule) //final rule, so check if we match the required string in this position. If so, we increase the start position by 1.
             {
-                remainingMessage = "";
+                bool result = false;
+                possibleMatches = new HashSet<int>();
+                foreach (int startPosition in startPositions)
+                {
+                    if (!(startPosition >= MessageToCheck.Length))
+                    {
+                        bool startPositionResult = (MessageToCheck[startPosition] == 'a' && RuleSet[ruleID][0][0].RuleValue == 0) || (MessageToCheck[startPosition] == 'b' && RuleSet[ruleID][0][0].RuleValue == 1);
+                        if (startPositionResult)
+                        {
+                            result = true;
+                            possibleMatches.Add(startPosition + 1);
+                        }
+                    }
+                }
+                if (result) { return true; }
                 return false;
-            }
-            if (RuleSet[ruleID][0][0].FinalRule)
-            {
-                remainingMessage = message[1..];
-                return (message[0] == 'a' && RuleSet[ruleID][0][0].RuleValue == 0) || (message[0] == 'b' && RuleSet[ruleID][0][0].RuleValue == 1);
             }
             else
             {
-                foreach (var ruleOptions in RuleSet[ruleID]) //these are options - either can be true
-                {
-                    bool ruleOptionValid = true;
-                    string messageNotConsumed = message;
+                bool result = false;
+                HashSet<int> resultHashSet = new HashSet<int>();
 
-                    for (int i = 0; i < ruleOptions.Value.Count; i++)
+                foreach (int startPosition in startPositions) //try to match each start position
+                {
+
+                    foreach (var ruleOptions in RuleSet[ruleID]) //these are options - either can be true
                     {
-                        if(!CheckSubString(messageNotConsumed, ruleOptions.Value[i].RuleValue, out messageNotConsumed))
+                        bool startPositionResult = true;
+                        HashSet<int> subPossibleMatches = new HashSet<int>() { startPosition };
+                        for (int i = 0; i < ruleOptions.Value.Count; i++)
                         {
-                            ruleOptionValid = false;
-                            break;
+                            bool subResult = CheckSubString(subPossibleMatches, ruleOptions.Value[i].RuleValue, out subPossibleMatches);
+                            if (!subResult)
+                            {
+                                startPositionResult = false;
+                                break;
+                            }
+                        }
+                        if (startPositionResult)
+                        {
+                            result = true;
+                            resultHashSet.UnionWith(subPossibleMatches);
                         }
                     }
-                    if (ruleOptionValid)
-                    {
-                        remainingMessage = messageNotConsumed;
-                        return true;
-                    }
                 }
-            }
-            remainingMessage = message;
-            return false;
-        }
 
+                possibleMatches = resultHashSet;
+                return result;
+
+            }
+        }
     }
     class Program
     {
         static void Main(string[] args)
         {
             string InputFileLocation = @"C:\Users\matta\Documents\AdventofCode2020\Inputs\";
-            string InputFileName = "Day19A.txt";
+            string InputFileName = "Day19B.txt";
             string fileAsString = File.ReadAllText(Path.Combine(InputFileLocation, InputFileName)).Replace("\r", "");
 
             string[] initialSplit = { "\n\n" };
